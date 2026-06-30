@@ -1,6 +1,8 @@
 from collections import Counter
 import csv
 import sys
+import datetime as dt
+from typing import Any
 
 def get_path(argv):
     if argv:
@@ -19,22 +21,32 @@ def read_records_csv(f):
     except FileNotFoundError:
         return None
 
-def compute_stats(records):
+def compute_stats(records: list[tuple[str, str, str]]) -> dict[str, Any]:
     activities = [activity for (_date, activity, _note) in records]
+    days = [date for (date, _activity, _note) in records]
     counts = Counter(activities)
     d = {}
     d["total_entries"] = len(records)
     d["unique_activities"] = len(counts)
     d["most_common_activity"], d["most_common_count"] = counts.most_common(1)[0]
-    dates = [date for (date, _activity, _note) in records]
-    d["days_with_entries"] = len(set(dates))
+    d["days_with_entries"] = len(set(days))
+    dates = [dt.date.fromisoformat(day) for day in days]
+    earliest = min(dates)
+    latest = max(dates)
+    d["earliest_day"] = earliest
+    d["latest_day"] = latest
+    d["date_range_days"] = (latest - earliest).days
+
     return d
 
-def print_stats(d):
+def print_stats(d: dict[str, Any]) -> None:
     print(f"Total entries: {d['total_entries']}")
     print(f"Unique activities: {d['unique_activities']}")
     print(f"Most common activity: {d['most_common_activity']} ({d['most_common_count']})")
     print(f"Days with entries: {d['days_with_entries']}")
+    print(f"Earliest day: {d['earliest_day']}")
+    print(f"Latest day: {d['latest_day']}")
+    print(f"Range of days: {d['date_range_days']}")
     return 0
 
 def main(argv=None):
